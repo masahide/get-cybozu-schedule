@@ -31,6 +31,14 @@ func TestReadSoap(t *testing.T) {
 	}
 }
 
+func TestBadXMLReadSoap(t *testing.T) {
+	testXMLbuffer := bytes.NewBufferString("hoge")
+	_, err := ReadSoap(testXMLbuffer)
+	if "EOF" != err.Error() {
+		t.Errorf("%s", err)
+	}
+}
+
 const testXML = `<?xml version="1.0" encoding="utf-8"?>
 <soap:Envelope
  xmlns:soap="http://www.w3.org/2003/05/soap-envelope"

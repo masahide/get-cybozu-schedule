@@ -8,8 +8,9 @@ func TestMain(t *testing.T) {
 */
 
 func ExampleShowVersion() {
-	os.Args[0] = "hoge"
-	os.Args[1] = "-v"
+
+	options := []string{"", "-v"}
+	os.Args = options
 	main()
 	// Output:
 	// get-cybozu-schedule version: -

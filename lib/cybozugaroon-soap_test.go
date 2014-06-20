@@ -2,6 +2,10 @@ package lib
 
 import (
 	"bytes"
+	"fmt"
+	"log"
+	"net/http"
+	"net/http/httptest"
 	"testing"
 )
 
@@ -37,6 +41,28 @@ func TestBadXMLReadSoap(t *testing.T) {
 	if "EOF" != err.Error() {
 		t.Errorf("%s", err)
 	}
+}
+
+func TestGetResponse(t *testing.T) {
+	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		fmt.Fprintln(w, "Hello, client")
+	}))
+	defer ts.Close()
+
+	var api_parameters = APIParameters{"id", "pass", "ScheduleGetEvents", `<parameters start="2014-01-01T08:00:00" end="2014-01-30T20:00:00" ></parameters>`}
+	_, err := GetResponse(ts.URL, api_parameters)
+	if err != nil {
+		log.Fatal(err)
+	}
+	//fmt.Printf("%s", res)
+}
+func TestBadGetResponse(t *testing.T) {
+	var api_parameters = APIParameters{}
+	_, err := GetResponse("hoge", api_parameters)
+	if err == nil {
+		log.Fatal(err)
+	}
+	//fmt.Printf("%s", err)
 }
 
 const testXML = `<?xml version="1.0" encoding="utf-8"?>

@@ -1,8 +1,13 @@
 package lib
 
 import (
+	"bytes"
 	"encoding/xml"
+	"fmt"
 	"io"
+	"io/ioutil"
+	"net/http"
+	"text/template"
 )
 
 type XMLexclusive struct {
@@ -79,3 +84,59 @@ func ReadSoap(reader io.Reader) ([]*XMLschedule_event, error) {
 
 	return xmlSoap.Schedule_event, nil
 }
+
+type APIParameters struct {
+	Username, Password, Action, Parameters string
+}
+
+func GetResponse(url string, parameters APIParameters) (result string, err error) {
+
+	t := template.Must(template.New("SOAPRequest").Parse(SOAPRequest))
+
+	body := bytes.NewBufferString("")
+	err = t.Execute(body, parameters)
+	//if err != nil {
+	//	err = fmt.Errorf("template.Execute: %#v", err)
+	//	return
+	//}
+	response, err := http.Post(url, "text/xml; charset=utf-8", body)
+	if err != nil {
+		err = fmt.Errorf("http.Post: %#v", err)
+		return
+	}
+	b, err := ioutil.ReadAll(response.Body)
+	response.Body.Close()
+	//if err != nil {
+	//	err = fmt.Errorf("ioutil.ReadAll: %#v", err)
+	//	return
+	//}
+	result = string(b)
+	return
+
+}
+
+const SOAPRequest = `<?xml version="1.0" encoding="UTF-8"?>
+<SOAP-ENV:Envelope xmlns:SOAP-ENV="http://www.w3.org/2003/05/soap-envelope"
+ xmlns:xsd="http://www.w3.org/2001/XMLSchema"
+ xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+ xmlns:SOAP-ENC="http://schemas.xmlsoap.org/soap/encoding/"
+ xmlns:base_services="http://wsdl.cybozu.co.jp/base/2008">
+ <SOAP-ENV:Header>
+  <Action SOAP-ENV:mustUnderstand="1" xmlns="http://schemas.xmlsoap.org/ws/2003/03/addressing">{{.Action}}</Action>
+  <Security xmlns:wsu="http://schemas.xmlsoap.org/ws/2002/07/utility"
+   SOAP-ENV:mustUnderstand="1"
+   xmlns="http://schemas.xmlsoap.org/ws/2002/12/secext">
+   <UsernameToken wsu:Id="id"><Username>{{.Username}}</Username><Password>{{.Password}}</Password></UsernameToken>
+  </Security>
+  <Timestamp SOAP-ENV:mustUnderstand="1" Id="id"
+   xmlns="http://schemas.xmlsoap.org/ws/2002/07/utility">
+   <Created>2037-08-12T14:45:00Z</Created>
+   <Expires>2037-08-12T14:45:00Z</Expires>
+  </Timestamp>
+  <Locale>jp</Locale>
+  </SOAP-ENV:Header><SOAP-ENV:Body>
+  <{{.Action}}>
+  {{.Parameters}}
+ </{{.Action}}>
+</SOAP-ENV:Body></SOAP-ENV:Envelope>
+`

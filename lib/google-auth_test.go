@@ -9,6 +9,7 @@ import (
 )
 
 func TestRedirectHandler(t *testing.T) {
+	var result RedirectResult
 	redirect := NewRedirect(make(chan RedirectResult, 1))
 	ts := httptest.NewServer(http.HandlerFunc(redirect.GetCode))
 	defer redirect.Stop()
@@ -22,11 +23,22 @@ func TestRedirectHandler(t *testing.T) {
 		t.Error("Status code error")
 		return
 	}
-	var result RedirectResult
 	result = <-redirect.Result
 	//fmt.Printf("result:%#v", result)
 	if "111" != result.Code {
 		t.Errorf("111 != result.Code: %#v", result.Code)
+		return
+	}
+
+	res, err = http.Get(ts.URL)
+	if err != nil {
+		t.Errorf("result: %#v", err)
+		return
+	}
+	result = <-redirect.Result
+	//fmt.Printf("result:%#v", result)
+	if nil == result.Err {
+		t.Errorf("result: %#v", res)
 		return
 	}
 
@@ -53,7 +65,12 @@ func TestGetAuthCode(t *testing.T) {
 		TokenURL:     "",
 		TokenCache:   oauth.CacheFile("cache.json"),
 	}
-	code, err := getAuthCode(config, LocalServerConfig{20343, 1, "test"})
+	code, err := getAuthCode(config, LocalServerConfig{20343, 1, "hoge"})
+	if err == nil {
+		t.Errorf("hoge browser")
+		return
+	}
+	code, err = getAuthCode(config, LocalServerConfig{20343, 1, "test"})
 	if err == nil {
 		t.Errorf("Error getAuthCode: %#v", err)
 		return

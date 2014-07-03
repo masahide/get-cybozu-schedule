@@ -10,8 +10,8 @@ import (
 
 func TestRedirectHandler(t *testing.T) {
 	redirect := NewRedirect(make(chan RedirectResult, 1))
-	ts := httptest.NewServer(http.HandlerFunc(redirect.Handler))
-	defer ts.Close()
+	ts := httptest.NewServer(http.HandlerFunc(redirect.GetCode))
+	defer redirect.Stop()
 	res, err := http.Get(ts.URL + "?code=111")
 	if err != nil {
 		t.Errorf("unexpected: %#v", err)
@@ -32,7 +32,6 @@ func TestRedirectHandler(t *testing.T) {
 
 }
 
-/*
 type WrapRedirect struct {
 	*Redirect
 }
@@ -43,7 +42,6 @@ func NewWrapRedirect(result chan RedirectResult) *WrapRedirect {
 func (this WrapRedirect) Handler(w http.ResponseWriter, r *http.Request) {
 	this.Result <- RedirectResult{Code: "111"}
 }
-*/
 
 func TestGetAuthCode(t *testing.T) {
 	config := &oauth.Config{
@@ -55,23 +53,39 @@ func TestGetAuthCode(t *testing.T) {
 		TokenURL:     "",
 		TokenCache:   oauth.CacheFile("cache.json"),
 	}
-	code, err := getAuthCode(config, LocalServerConfig{0, 0, "test"})
-	if err != nil {
+	code, err := getAuthCode(config, LocalServerConfig{20343, 1, "test"})
+	if err == nil {
 		t.Errorf("Error getAuthCode: %#v", err)
 		return
 	}
-	if "200" != code {
-		t.Errorf("Error getAuthCode 200 != code :%#v", code)
+	if err.Error() != "リダイレクト待ち時間がタイムアウトしました" {
+		t.Errorf("Error getAuthCode: %#v", err)
 		return
 	}
-
+	if code != "" {
+		t.Errorf("getAuthCode: %#v", code)
+		return
+	}
 }
 
 func TestServer(t *testing.T) {
 	redirect := NewRedirect(make(chan RedirectResult, 1))
-	go redirect.Server(-1)
+	go redirect.Server(2000)
 	<-redirect.ServerStart
-	//var result RedirectResult
-	//result = <-redirect.Result
-	//fmt.Printf("result:%#v", result)
+	redirect.Stop()
+	var result RedirectResult
+	result = <-redirect.Result
+	if result.Err != nil {
+		t.Errorf("Error Server: %#v", result)
+	}
+}
+
+func TestServerError(t *testing.T) {
+	redirect := NewRedirect(make(chan RedirectResult, 1))
+	go redirect.Server(-1)
+	var result RedirectResult
+	result = <-redirect.Result
+	if result.Err == nil {
+		t.Errorf("Error Server: %#v", result.Err)
+	}
 }

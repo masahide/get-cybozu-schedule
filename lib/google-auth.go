@@ -15,7 +15,7 @@ import (
 type LocalServerConfig struct {
 	Port    int
 	Timeout int
-	Os      string
+	OS      string
 }
 
 type RedirectResult struct {
@@ -26,7 +26,8 @@ type RedirectResult struct {
 type Redirect struct {
 	Result      chan RedirectResult
 	ServerStart chan bool
-	Listener    *StoppableListener
+	ServerStop  chan bool
+	Listener    net.Listener
 }
 
 type StartServer func(port int)
@@ -44,7 +45,7 @@ var openBrowser = map[string]OpenBrowser{
 }
 
 func NewRedirect(result chan RedirectResult) *Redirect {
-	return &Redirect{result, make(chan bool, 1), nil}
+	return &Redirect{result, make(chan bool, 1), make(chan bool, 1), nil}
 }
 
 func GoogleOauth(config *oauth.Config, localServerConfig LocalServerConfig) (transport *oauth.Transport, err error) {
@@ -70,8 +71,8 @@ func GoogleOauth(config *oauth.Config, localServerConfig LocalServerConfig) (tra
 	return
 }
 
-func (this *Redirect) Handler(w http.ResponseWriter, r *http.Request) {
-	defer this.Listener.Stop()
+func (this *Redirect) GetCode(w http.ResponseWriter, r *http.Request) {
+	//defer this.Listener.Stop()
 	code := r.URL.Query().Get("code")
 
 	if code == "" {
@@ -87,25 +88,26 @@ func (this *Redirect) Handler(w http.ResponseWriter, r *http.Request) {
 
 func (this *Redirect) Server(port int) {
 	mux := http.NewServeMux()
-	mux.HandleFunc("/", this.Handler)
+	mux.HandleFunc("/", this.GetCode)
 	host := fmt.Sprintf("localhost:%d", port)
 	fmt.Printf("Start Listen: %s\n", host)
-	this.ServerStart <- true
-	originalListener, err := net.Listen("tcp", host)
+	var err error
+	this.Listener, err = net.Listen("tcp", host)
 	if err != nil {
 		this.Result <- RedirectResult{Err: err}
+		return
 	}
-	this.Listener, _ = New(originalListener)
 	server := http.Server{}
 	server.Handler = mux
-	server.Serve(this.Listener)
-	//err := http.ListenAndServe(host, nil)
-	/*
-		if err != nil {
-			this.Result <- RedirectResult{Err: err}
-		}
-	*/
+	go server.Serve(this.Listener)
+	this.ServerStart <- true
+	<-this.ServerStop
+	this.Listener.Close()
+	this.Result <- RedirectResult{Err: err}
 	return
+}
+func (this *Redirect) Stop() {
+	this.ServerStop <- true
 }
 
 func getAuthCode(config *oauth.Config, localServerConfig LocalServerConfig) (string, error) {
@@ -114,7 +116,7 @@ func getAuthCode(config *oauth.Config, localServerConfig LocalServerConfig) (str
 	var cmd *exec.Cmd
 
 	//os := runtime.GOOS
-	os := localServerConfig.Os
+	os := localServerConfig.OS
 	var browser *OpenBrowser
 	for key, value := range openBrowser {
 		if os == key {
@@ -141,6 +143,7 @@ func getAuthCode(config *oauth.Config, localServerConfig LocalServerConfig) (str
 		return "", fmt.Errorf("Error:  start browser: %v\n", err)
 	}
 
+	defer redirect.Stop()
 	var result RedirectResult
 
 	select {

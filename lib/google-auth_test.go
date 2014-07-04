@@ -1,11 +1,10 @@
 package lib
 
 import (
+	"errors"
 	"net/http"
 	"net/http/httptest"
 	"testing"
-
-	"code.google.com/p/goauth2/oauth"
 )
 
 func TestRedirectHandler(t *testing.T) {
@@ -44,33 +43,13 @@ func TestRedirectHandler(t *testing.T) {
 
 }
 
-type WrapRedirect struct {
-	*Redirect
-}
-
-func NewWrapRedirect(result chan RedirectResult) *WrapRedirect {
-	return &WrapRedirect{NewRedirect(result)}
-}
-func (this WrapRedirect) Handler(w http.ResponseWriter, r *http.Request) {
-	this.Result <- RedirectResult{Code: "111"}
-}
-
 func TestGetAuthCode(t *testing.T) {
-	config := &oauth.Config{
-		ClientId:     "",
-		ClientSecret: "",
-		RedirectURL:  "",
-		Scope:        "",
-		AuthURL:      "",
-		TokenURL:     "",
-		TokenCache:   oauth.CacheFile("cache.json"),
-	}
-	code, err := getAuthCode(config, LocalServerConfig{20343, 1, "hoge"})
+	code, err := getAuthCode("", LocalServerConfig{20343, 1, "hoge"})
 	if err == nil {
 		t.Errorf("hoge browser")
 		return
 	}
-	code, err = getAuthCode(config, LocalServerConfig{20343, 1, "test"})
+	code, err = getAuthCode("", LocalServerConfig{20343, 1, "test"})
 	if err == nil {
 		t.Errorf("Error getAuthCode: %#v", err)
 		return
@@ -104,5 +83,43 @@ func TestServerError(t *testing.T) {
 	result = <-redirect.Result
 	if result.Err == nil {
 		t.Errorf("Error Server: %#v", result.Err)
+	}
+}
+
+type TestGetTokenCacheOK struct {
+}
+
+func (this *TestGetTokenCacheOK) GetTokenCache() error {
+	return nil
+}
+func (this *TestGetTokenCacheOK) GetAuthCodeURL() string {
+	return "url"
+}
+func (this *TestGetTokenCacheOK) GetAuthToken(code string) error {
+	return nil
+}
+
+type TestGetTokenCacheNG struct {
+}
+
+func (this *TestGetTokenCacheNG) GetTokenCache() error {
+	return errors.New("")
+}
+func (this *TestGetTokenCacheNG) GetAuthCodeURL() string {
+	return "url"
+}
+func (this *TestGetTokenCacheNG) GetAuthToken(code string) error {
+	return nil
+}
+
+func TestGoogleOauth(t *testing.T) {
+	err := GoogleOauth(&TestGetTokenCacheOK{}, LocalServerConfig{20343, 1, "hoge"})
+	if err != nil {
+		t.Errorf("Error Server: %#v", err)
+	}
+
+	err = GoogleOauth(&TestGetTokenCacheNG{}, LocalServerConfig{20343, 1, "hoge"})
+	if err == nil {
+		t.Errorf("err == nil")
 	}
 }

@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"net"
 	"net/http"
-	"os"
 	"os/exec"
 	"strings"
 	"time"
@@ -48,25 +47,47 @@ func NewRedirect(result chan RedirectResult) *Redirect {
 	return &Redirect{result, make(chan bool, 1), make(chan bool, 1), nil}
 }
 
-func GoogleOauth(config *oauth.Config, localServerConfig LocalServerConfig) (transport *oauth.Transport, err error) {
+type AuthToken interface {
+	GetTokenCache() error
+	GetAuthCodeURL() string
+	GetAuthToken(string) error
+}
 
-	transport = &oauth.Transport{Config: config}
+type GoogleToken struct {
+	transport *oauth.Transport
+}
+
+func (this *GoogleToken) GetTokenCache() error {
+	_, err := this.transport.Config.TokenCache.Token()
+	return err
+}
+func (this *GoogleToken) GetAuthCodeURL() string {
+	return this.transport.Config.AuthCodeURL("")
+}
+func (this *GoogleToken) GetAuthToken(code string) error {
+	_, err := this.transport.Exchange(code)
+	return err
+}
+
+//func GoogleOauth(config *oauth.Config, localServerConfig LocalServerConfig) (transport *oauth.Transport, err error) {
+//	transport = &oauth.Transport{Config: config}
+func GoogleOauth(transport AuthToken, localServerConfig LocalServerConfig) (err error) {
 
 	// キャッシュからトークンファイルを取得
-	_, err = config.TokenCache.Token()
+	err = transport.GetTokenCache()
+	if err == nil {
+		return
+	}
+	url := transport.GetAuthCodeURL()
+	code, err := getAuthCode(url, localServerConfig)
 	if err != nil {
-		code, err := getAuthCode(config, localServerConfig)
-		if err != nil {
-			fmt.Fprintf(os.Stderr, "%v\n", err)
-			os.Exit(1)
-		}
-
-		// 認証トークンを取得する。（取得後、キャッシュへ）
-		_, err = transport.Exchange(code)
-		if err != nil {
-			fmt.Printf("Exchange Error: %v\n", err)
-			os.Exit(1)
-		}
+		err = fmt.Errorf("Error getAuthCode: %#v", err)
+		return
+	}
+	// 認証トークンを取得する。（取得後、キャッシュへ）
+	err = transport.GetAuthToken(code)
+	if err != nil {
+		err = fmt.Errorf("Exchange: %#v", err)
 	}
 	return
 }
@@ -111,8 +132,7 @@ func (this *Redirect) Stop() {
 	this.ServerStop <- true
 }
 
-func getAuthCode(config *oauth.Config, localServerConfig LocalServerConfig) (string, error) {
-	url := config.AuthCodeURL("")
+func getAuthCode(url string, localServerConfig LocalServerConfig) (string, error) {
 
 	var cmd *exec.Cmd
 

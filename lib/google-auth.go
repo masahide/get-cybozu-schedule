@@ -155,8 +155,8 @@ func getAuthCode(url string, localServerConfig LocalServerConfig) (string, error
 
 	// set redirect timeout
 	redirectTimeout := time.After(time.Duration(localServerConfig.Timeout) * time.Second)
-	fmt.Println("2秒後にブラウザを起動します...")
-	time.Sleep(2 * time.Second)
+	//fmt.Println("2秒後にブラウザを起動します...")
+	//time.Sleep(2 * time.Second)
 	<-redirect.ServerStart
 
 	url = strings.Replace(url, "&", browser.EscapeAnd, -1)

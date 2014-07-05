@@ -40,7 +40,8 @@ var openBrowser = map[string]OpenBrowser{
 	"windows": {`\&`, []string{"open", "-a", "safari"}},
 	"darwin":  {`^&`, []string{"cmd", "/c", "start"}},
 	"linux":   {`&`, []string{"w3m", "-t", "4"}},
-	"test":    {`&`, []string{"echo", "", ""}},
+	"test1":   {`&`, []string{"echo", "", ""}},
+	"test2":   {`&`, []string{"fugafuga", "", ""}},
 }
 
 func NewRedirect(result chan RedirectResult) *Redirect {
@@ -142,6 +143,7 @@ func getAuthCode(url string, localServerConfig LocalServerConfig) (string, error
 	for key, value := range openBrowser {
 		if os == key {
 			browser = &value
+			break
 		}
 	}
 	if browser == nil {
@@ -159,6 +161,8 @@ func getAuthCode(url string, localServerConfig LocalServerConfig) (string, error
 
 	url = strings.Replace(url, "&", browser.EscapeAnd, -1)
 	// ブラウザ起動
+
+	//fmt.Printf("%v %v %v %v", browser.arg[0], browser.arg[1], browser.arg[2], url)
 	cmd = exec.Command(browser.arg[0], browser.arg[1], browser.arg[2], url)
 	if err := cmd.Start(); err != nil {
 		return "", fmt.Errorf("Error:  start browser: %v\n", err)

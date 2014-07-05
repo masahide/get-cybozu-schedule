@@ -5,6 +5,7 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"testing"
+	"time"
 )
 
 func TestRedirectHandler(t *testing.T) {
@@ -49,16 +50,30 @@ func TestGetAuthCode(t *testing.T) {
 		t.Errorf("hoge browser")
 		return
 	}
-	code, err = getAuthCode("", LocalServerConfig{20343, 1, "test"})
+	code, err = getAuthCode("", LocalServerConfig{20342, 1, "test1"})
 	if err == nil {
 		t.Errorf("Error getAuthCode: %#v", err)
 		return
 	}
 	if err.Error() != "リダイレクト待ち時間がタイムアウトしました" {
-		t.Errorf("Error getAuthCode: %#v", err)
+		t.Errorf("Not EQ リダイレクト待ち時間がタイムアウトしました: %#v", err)
 		return
 	}
 	if code != "" {
+		t.Errorf("getAuthCode: %#v", code)
+		return
+	}
+	code, err = getAuthCode("", LocalServerConfig{20343, 1, "test2"})
+	if err == nil {
+		t.Errorf("getAuthCode: %#v", code)
+		return
+	}
+	go func() {
+		time.Sleep(1 * time.Second)
+		_, err = http.Get("http://127.0.0.1:20344/?code=222")
+	}()
+	code, err = getAuthCode("", LocalServerConfig{20344, 10, "test1"})
+	if err != nil {
 		t.Errorf("getAuthCode: %#v", code)
 		return
 	}
@@ -109,6 +124,19 @@ func (this *TestGetTokenCacheNG) GetAuthCodeURL() string {
 	return "url"
 }
 func (this *TestGetTokenCacheNG) GetAuthToken(code string) error {
+	return nil
+}
+
+type TestGetAuthTokenNG struct {
+}
+
+func (this *TestGetAuthTokenNG) GetTokenCache() error {
+	return errors.New("")
+}
+func (this *TestGetAuthTokenNG) GetAuthCodeURL() string {
+	return "url"
+}
+func (this *TestGetAuthTokenNG) GetAuthToken(code string) error {
 	return nil
 }
 

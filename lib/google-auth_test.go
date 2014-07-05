@@ -137,7 +137,7 @@ func (this *TestGetAuthTokenNG) GetAuthCodeURL() string {
 	return "url"
 }
 func (this *TestGetAuthTokenNG) GetAuthToken(code string) error {
-	return nil
+	return errors.New("NG")
 }
 
 func TestGoogleOauth(t *testing.T) {
@@ -149,5 +149,30 @@ func TestGoogleOauth(t *testing.T) {
 	err = GoogleOauth(&TestGetTokenCacheNG{}, LocalServerConfig{20343, 1, "hoge"})
 	if err == nil {
 		t.Errorf("err == nil")
+	}
+	go func() {
+		time.Sleep(1 * time.Second)
+		_, err = http.Get("http://127.0.0.1:20345/")
+	}()
+	err = GoogleOauth(&TestGetAuthTokenNG{}, LocalServerConfig{20345, 3, "test1"})
+	if err == nil {
+		t.Errorf("err != ダイレクト: codeを取得できませんでした。%s", err.Error())
+	}
+
+	go func() {
+		time.Sleep(1 * time.Second)
+		_, err = http.Get("http://127.0.0.1:20346/?code=1234")
+	}()
+	err = GoogleOauth(&TestGetAuthTokenNG{}, LocalServerConfig{20346, 3, "test1"})
+	if err == nil {
+		t.Errorf("err == nil")
+	}
+	go func() {
+		time.Sleep(1 * time.Second)
+		_, err = http.Get("http://127.0.0.1:20347/?code=321")
+	}()
+	err = GoogleOauth(&TestGetTokenCacheNG{}, LocalServerConfig{20347, 3, "test1"})
+	if err != nil {
+		t.Errorf("err %v", err)
 	}
 }

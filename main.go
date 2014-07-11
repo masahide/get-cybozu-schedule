@@ -4,7 +4,6 @@ import (
 	"flag"
 	"fmt"
 	"log"
-	"os"
 	"runtime"
 
 	"code.google.com/p/goauth2/oauth"
@@ -52,21 +51,22 @@ func main() {
 	svc, err = calendar.New(transport.Client())
 
 	if err != nil {
-		fmt.Fprintf(os.Stderr, "%v\n", err)
-		os.Exit(1)
+		log.Fatalf("Error calendar.New: %v", err)
+		return
 	}
 
 	cl, err = svc.CalendarList.List().Do()
 
 	if err != nil {
-		fmt.Fprintf(os.Stderr, "%v\n", err)
-		os.Exit(1)
+		log.Fatalf("Error CalendarList.List(): %v", err)
+		return
 	}
 
 	fmt.Printf("--- Your calendars ---\n")
 
 	for _, item := range cl.Items {
-		fmt.Printf("%v, %v\n", item.Summary, item.Description)
+		//fmt.Printf("%v, %v\n", item.Summary, item.Description)
+		fmt.Printf("%# v\n", item)
 	}
 
 }

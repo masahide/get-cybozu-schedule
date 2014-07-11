@@ -37,8 +37,8 @@ type OpenBrowser struct {
 }
 
 var openBrowser = map[string]OpenBrowser{
-	"windows": {`\&`, []string{"open", "-a", "safari"}},
-	"darwin":  {`^&`, []string{"cmd", "/c", "start"}},
+	"windows": {`^&`, []string{"cmd", "/c", "start"}},
+	"darwin":  {`&`, []string{"open", "-a", "safari"}},
 	"linux":   {`&`, []string{"w3m", "-t", "4"}},
 	"test1":   {`&`, []string{"echo", "", ""}},
 	"test2":   {`&`, []string{"fugafuga", "", ""}},
@@ -55,18 +55,18 @@ type AuthToken interface {
 }
 
 type GoogleToken struct {
-	transport *oauth.Transport
+	Transport *oauth.Transport
 }
 
 func (this *GoogleToken) GetTokenCache() error {
-	_, err := this.transport.Config.TokenCache.Token()
+	_, err := this.Transport.Config.TokenCache.Token()
 	return err
 }
 func (this *GoogleToken) GetAuthCodeURL() string {
-	return this.transport.Config.AuthCodeURL("")
+	return this.Transport.Config.AuthCodeURL("")
 }
 func (this *GoogleToken) GetAuthToken(code string) error {
-	_, err := this.transport.Exchange(code)
+	_, err := this.Transport.Exchange(code)
 	return err
 }
 
@@ -165,7 +165,7 @@ func getAuthCode(url string, localServerConfig LocalServerConfig) (string, error
 	//fmt.Printf("%v %v %v %v", browser.arg[0], browser.arg[1], browser.arg[2], url)
 	cmd = exec.Command(browser.arg[0], browser.arg[1], browser.arg[2], url)
 	if err := cmd.Start(); err != nil {
-		return "", fmt.Errorf("Error:  start browser: %v\n", err)
+		return "", fmt.Errorf("Error:  start browser: %v, browser: %v\n", err, browser)
 	}
 
 	defer redirect.Stop()

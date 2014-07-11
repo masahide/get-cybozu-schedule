@@ -24,3 +24,5 @@ _testmain.go
 
 .work
 bin
+google.json
+cache.json

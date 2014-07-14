@@ -29,12 +29,12 @@ func main() {
 	}
 	transport := oauth.Transport{
 		Config: &oauth.Config{
-			ClientId:     config.ClientID,
-			ClientSecret: config.ClientSecret,
+			ClientId:     config.Installed.ClientID,
+			ClientSecret: config.Installed.ClientSecret,
 			RedirectURL:  fmt.Sprintf("%s:%d", "http://localhost", port),
 			Scope:        "https://www.googleapis.com/auth/calendar",
-			AuthURL:      "https://accounts.google.com/o/oauth2/auth",
-			TokenURL:     "https://accounts.google.com/o/oauth2/token",
+			AuthURL:      config.Installed.AuthURL,
+			TokenURL:     config.Installed.TokenURL,
 			TokenCache:   oauth.CacheFile("cache.json"),
 		},
 	}

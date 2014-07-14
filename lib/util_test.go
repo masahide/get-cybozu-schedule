@@ -14,12 +14,12 @@ func TestParse(t *testing.T) {
 		t.Errorf("Error Parse: %#v", err)
 		return
 	}
-	if config.ClientID != "ab" {
-		t.Errorf("Error Parse: %#v", config.ClientID)
+	if config.Installed.ClientID != "hogeid" {
+		t.Errorf("Error Parse: %#v", config.Installed.ClientID)
 		return
 	}
 	_, err = Parse("test2.json")
-	if err.Error() != `error: json.Unmarshal invalid character '}' looking for beginning of object key string` {
+	if err.Error() != `error: json.Unmarshal invalid character 'b' looking for beginning of object key string` {
 		t.Errorf("Error Parse: %#v", err)
 		return
 	}

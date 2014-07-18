@@ -7,7 +7,6 @@ import (
 	"runtime"
 
 	"code.google.com/p/goauth2/oauth"
-	"code.google.com/p/google-api-go-client/calendar/v3"
 	"github.com/masahide/get-cybozu-schedule/lib"
 )
 
@@ -45,22 +44,27 @@ func main() {
 		return
 	}
 
-	var svc *calendar.Service
-	var cl *calendar.CalendarList
+	googleCalendar := lib.NewGoogleCalendar(transport.Client(), "gbrh5sna2udq8h154o4qer0pvc@group.calendar.google.com")
+	/*
+		var svc *calendar.Service
+		var cl *calendar.CalendarList
 
-	svc, err = calendar.New(transport.Client())
+		svc, err = calendar.New(transport.Client())
 
-	if err != nil {
-		log.Fatalf("Error calendar.New: %v", err)
-		return
-	}
+		if err != nil {
+			log.Fatalf("Error calendar.New: %v", err)
+			return
+		}
 
-	cl, err = svc.CalendarList.List().Do()
+		cl, err = svc.CalendarList.List().Do()
 
-	if err != nil {
-		log.Fatalf("Error CalendarList.List(): %v", err)
-		return
-	}
+		if err != nil {
+			log.Fatalf("Error CalendarList.List(): %v", err)
+			return
+		}
+	*/
+
+	cl, err := googleCalendar.List()
 
 	fmt.Printf("--- Your calendars ---\n")
 

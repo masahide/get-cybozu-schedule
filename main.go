@@ -7,6 +7,7 @@ import (
 	"runtime"
 
 	"code.google.com/p/goauth2/oauth"
+	"github.com/kr/pretty"
 	"github.com/masahide/get-cybozu-schedule/lib"
 )
 
@@ -64,13 +65,22 @@ func main() {
 		}
 	*/
 
-	cl, err := googleCalendar.List()
-
-	fmt.Printf("--- Your calendars ---\n")
-
-	for _, item := range cl.Items {
-		//fmt.Printf("%v, %v\n", item.Summary, item.Description)
-		fmt.Printf("%# v\n", item)
+	//cl, err := googleCalendar.List()
+	//fmt.Printf("--- Your calendars ---\n")
+	//for _, item := range cl.Items {
+	//	fmt.Printf("%# v\n", item)
+	//}
+	event, err := googleCalendar.InsertEvent()
+	if err != nil {
+		log.Fatalf("Error calendar.InsertEvent: %v", err)
+		return
 	}
+	pretty.Printf("Insertevnet: %# v\n", event)
+	event, err = googleCalendar.UpdateEvent()
+	if err != nil {
+		log.Fatalf("Error calendar.UpdateEvent: %v", err)
+		return
+	}
+	pretty.Printf("Updateevnet: %# v\n", event)
 
 }

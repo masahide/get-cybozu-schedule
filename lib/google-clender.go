@@ -30,11 +30,88 @@ func (this *GoogleCalendar) Insert(event *calendar.Event) (*calendar.Event, erro
 	return this.svc.Events.Insert(this.calendarId, event).Do()
 }
 func (this *GoogleCalendar) Update(id string, event *calendar.Event) (*calendar.Event, error) {
-	return this.svc.Events.Update(id, this.calendarId, event).Do()
+	return this.svc.Events.Update(this.calendarId, id, event).Do()
 }
 func (this *GoogleCalendar) List() (*calendar.Events, error) {
 	return this.svc.Events.List(this.calendarId).Do()
 }
 func (this *GoogleCalendar) ClendarList() (*calendar.CalendarList, error) {
 	return this.svc.CalendarList.List().Do()
+}
+
+func (this *GoogleCalendar) InsertEvent() (*calendar.Event, error) {
+	event := calendar.Event{
+		Id:      "123456abcdef",
+		Summary: "test test",
+		Start: &calendar.EventDateTime{
+			DateTime: `2014-07-15T12:30:00+09:00`,
+			TimeZone: "Asia/Tokyo",
+		},
+		End: &calendar.EventDateTime{
+			DateTime: `2014-07-15T13:00:00+09:00`,
+			TimeZone: "Asia/Tokyo",
+		},
+		Recurrence: []string{
+			"RRULE:FREQ=WEEKLY;UNTIL=20140801T000000Z",
+			"EXDATE:20140722T123000",
+		},
+	}
+	return this.Insert(&event)
+}
+func (this *GoogleCalendar) UpdateEvent() (*calendar.Event, error) {
+	event := calendar.Event{
+		Summary: "test test",
+		Start: &calendar.EventDateTime{
+			DateTime: `2014-07-15T12:30:00+09:00`,
+			TimeZone: "Asia/Tokyo",
+		},
+		End: &calendar.EventDateTime{
+			DateTime: `2014-07-15T13:00:00+09:00`,
+			TimeZone: "Asia/Tokyo",
+		},
+		Recurrence: []string{
+			"RRULE:FREQ=DAILY;BYDAY=MO,TU,WE,TH,FR;UNTIL=20140801T000000Z",
+			"EXDATE:20140716T123000",
+			"EXDATE:20140717T123000",
+		},
+	}
+	return this.Update("123456abcdef", &event)
+}
+func (this *GoogleCalendar) InsertTestWeeklyEvent() (*calendar.Event, error) {
+	event := calendar.Event{
+		Summary: "test test",
+		Start: &calendar.EventDateTime{
+			DateTime: `2014-07-15T12:30:00+09:00`,
+			TimeZone: "Asia/Tokyo",
+		},
+		End: &calendar.EventDateTime{
+			DateTime: `2014-07-15T13:00:00+09:00`,
+			TimeZone: "Asia/Tokyo",
+		},
+		Recurrence: []string{
+			"RRULE:FREQ=WEEKLY;UNTIL=20140801T000000Z",
+			"EXDATE:20140722T123000",
+		},
+	}
+	return this.Insert(&event)
+}
+
+func (this *GoogleCalendar) InsertTestWeekDayEvent() (*calendar.Event, error) {
+	event := calendar.Event{
+		Summary: "test test",
+		Start: &calendar.EventDateTime{
+			DateTime: `2014-07-15T12:30:00+09:00`,
+			TimeZone: "Asia/Tokyo",
+		},
+		End: &calendar.EventDateTime{
+			DateTime: `2014-07-15T13:00:00+09:00`,
+			TimeZone: "Asia/Tokyo",
+		},
+		Recurrence: []string{
+			"RRULE:FREQ=DAILY;BYDAY=MO,TU,WE,TH,FR;UNTIL=20140801T000000Z",
+			"EXDATE:20140716T123000",
+			"EXDATE:20140717T123000",
+		},
+	}
+	return this.Insert(&event)
 }

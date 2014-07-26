@@ -29,8 +29,6 @@ type Redirect struct {
 	Listener    net.Listener
 }
 
-type StartServer func(port int)
-
 type OpenBrowser struct {
 	EscapeAnd string
 	arg       []string

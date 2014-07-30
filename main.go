@@ -70,13 +70,28 @@ func main() {
 	//for _, item := range cl.Items {
 	//	fmt.Printf("%# v\n", item)
 	//}
-	event, err := googleCalendar.InsertEvent()
-	if err != nil {
-		log.Fatalf("Error calendar.InsertEvent: %v", err)
-		return
-	}
-	pretty.Printf("Insertevnet: %# v\n", event)
-	event, err = googleCalendar.UpdateEvent()
+
+	/*
+		event, err := googleCalendar.InsertEvent("2123456abcdef")
+		if err != nil {
+			log.Fatalf("Error calendar.InsertEvent: %v", err)
+			return
+		}
+		pretty.Printf("Insertevnet: %# v\n", event)
+	*/
+	/*
+		event, err = googleCalendar.Get("2123456abcdef")
+		if err != nil {
+			log.Fatalf("Error calendar.UpdateEvent: %v", err)
+			return
+		}
+		pretty.Printf("Get evnet: %# v\n", event)
+	*/
+
+	//err = googleCalendar.Delete("2123456abcdef")
+	//pretty.Printf("Delete evnet err: %# v\n", err)
+
+	event, err := googleCalendar.UpdateEvent("2123456abcdef")
 	if err != nil {
 		log.Fatalf("Error calendar.UpdateEvent: %v", err)
 		return

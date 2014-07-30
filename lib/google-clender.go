@@ -10,6 +10,7 @@ type Calendar interface {
 	Get(string) (*calendar.Event, error)
 	Insert(*calendar.Event) (*calendar.Event, error)
 	Update(string, *calendar.Event) (*calendar.Event, error)
+	Delete(string, *calendar.Event) error
 }
 
 type GoogleCalendar struct {
@@ -32,6 +33,9 @@ func (this *GoogleCalendar) Insert(event *calendar.Event) (*calendar.Event, erro
 func (this *GoogleCalendar) Update(id string, event *calendar.Event) (*calendar.Event, error) {
 	return this.svc.Events.Update(this.calendarId, id, event).Do()
 }
+func (this *GoogleCalendar) Delete(id string) error {
+	return this.svc.Events.Delete(this.calendarId, id).Do()
+}
 func (this *GoogleCalendar) List() (*calendar.Events, error) {
 	return this.svc.Events.List(this.calendarId).Do()
 }
@@ -39,9 +43,9 @@ func (this *GoogleCalendar) ClendarList() (*calendar.CalendarList, error) {
 	return this.svc.CalendarList.List().Do()
 }
 
-func (this *GoogleCalendar) InsertEvent() (*calendar.Event, error) {
+func (this *GoogleCalendar) InsertEvent(id string) (*calendar.Event, error) {
 	event := calendar.Event{
-		Id:      "123456abcdef",
+		Id:      id,
 		Summary: "test test",
 		Start: &calendar.EventDateTime{
 			DateTime: `2014-07-15T12:30:00+09:00`,
@@ -58,7 +62,10 @@ func (this *GoogleCalendar) InsertEvent() (*calendar.Event, error) {
 	}
 	return this.Insert(&event)
 }
-func (this *GoogleCalendar) UpdateEvent() (*calendar.Event, error) {
+func (this *GoogleCalendar) GetEvent(id string) (*calendar.Event, error) {
+	return this.Get(id)
+}
+func (this *GoogleCalendar) UpdateEvent(id string) (*calendar.Event, error) {
 	event := calendar.Event{
 		Summary: "test test",
 		Start: &calendar.EventDateTime{
@@ -74,8 +81,9 @@ func (this *GoogleCalendar) UpdateEvent() (*calendar.Event, error) {
 			"EXDATE:20140716T123000",
 			"EXDATE:20140717T123000",
 		},
+		//Status: "confirmed",
 	}
-	return this.Update("123456abcdef", &event)
+	return this.Update(id, &event)
 }
 func (this *GoogleCalendar) InsertTestWeeklyEvent() (*calendar.Event, error) {
 	event := calendar.Event{

@@ -41,7 +41,7 @@ func (this *GoogleCalendar) ClendarList() (*calendar.CalendarList, error) {
 
 func (this *GoogleCalendar) InsertEvent() (*calendar.Event, error) {
 	event := calendar.Event{
-		Id:      "123456abcdef",
+		Id:      "123456abcdefg",
 		Summary: "test test",
 		Start: &calendar.EventDateTime{
 			DateTime: `2014-07-15T12:30:00+09:00`,
@@ -75,7 +75,7 @@ func (this *GoogleCalendar) UpdateEvent() (*calendar.Event, error) {
 			"EXDATE:20140717T123000",
 		},
 	}
-	return this.Update("123456abcdef", &event)
+	return this.Update("123456abcdefg", &event)
 }
 func (this *GoogleCalendar) InsertTestWeeklyEvent() (*calendar.Event, error) {
 	event := calendar.Event{
